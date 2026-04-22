@@ -1,0 +1,27 @@
+name: Repository Analysis
+
+services:
+  jupyter:
+    container_name: jupyter
+    build: ./jupyter
+    ports:
+      - 8888:8888
+    volumes:
+      - ./data/jupyter:/home/jovyan/work/
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      JUPYTER_TOKEN: "fhdw" 
+      RESTARTABLE: "yes" 
+    depends_on: 
+      - orientdb
+  orientdb:
+    container_name: orientdb
+    image: orientdb:2.2.19 # https://github.com/mogui/pyorient/releases/tag/v1.5.5
+    ports:
+      - "2424:2424"
+      - "2480:2480"
+    volumes:
+      - ./data/orientdb:/orientdb/databases
+    environment:
+      ORIENTDB_ROOT_PASSWORD: fhdw
+  

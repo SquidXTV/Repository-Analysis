@@ -1,0 +1,4 @@
+**/*.quarto_ipynb*
+extract.html
+extract_files/*
+data/orientdb/*

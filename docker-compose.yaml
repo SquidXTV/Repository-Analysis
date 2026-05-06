@@ -16,7 +16,7 @@ services:
       - orientdb
   orientdb:
     container_name: orientdb
-    image: orientdb:2.2.19 # https://github.com/mogui/pyorient/releases/tag/v1.5.5
+    image: orientdb:3.2.51
     ports:
       - "2424:2424"
       - "2480:2480"

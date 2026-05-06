@@ -1,0 +1,3 @@
+Ich werde die GitHub REST API (https://docs.github.com/en/rest) nutzen und die N beliebtesten repositories (anhand der Sterne) und die Metadaten der Issues/PRs
+in die OrientDB Datenbank laden. Die Anzahl der Repositories bleibt im Bereich von [2MB; 24MB] für das gesamte Datenset.
+Es wird analysiert, ob die beliebtesten Repositories auch die aktivsten sind. Dies wird anhand der zuletzt abgeschlossenen Pull Requests gemessen.

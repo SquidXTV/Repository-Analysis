@@ -1,0 +1,25 @@
+$if(Autor)$  
+\newcommand{\Autor}{$Autor$}
+$else$
+\newcommand{\Autor}{\textbf{(**Variable Autor definieren!**}}
+$endif$
+
+$if(Ort)$  
+\newcommand{\Ort}{$Ort$}
+$else$
+\newcommand{\Ort}{\textbf{(**Variable Ort definieren!**}}
+$endif$
+
+$if(Abgabedatum)$  
+\newcommand{\Abgabedatum}{$Abgabedatum$}
+$else$
+\newcommand{\Abgabedatum}{\textbf{(**Variable Abgabedatum definieren!**}}
+$endif$
+
+$if(AutorUnterschrift)$  
+\newcommand{\AutorUnterschrift}{ \includegraphics[width=8cm]{$AutorUnterschrift$}}
+$else$
+\newcommand{\AutorUnterschrift}{\textbf{(**Variable AutorUnterschrift definieren!**}}
+$endif$
+
+\input{template/config/Ehrenwoertliche_Erklaerung.tex}

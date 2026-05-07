@@ -1,0 +1,42 @@
+$if(Kooperationsunternehmen)$  
+\newcommand{\kooperationsunternehmen}{$Kooperationsunternehmen$}
+$else$
+\newcommand{\kooperationsunternehmen}{Unternehmen GmbH}
+$endif$
+
+\pagenumbering{Roman}
+
+$if(has-frontmatter)$
+  \begin{frontmatter}
+  \begin{titlepage}
+  $_titlepage.tex()$
+  
+  \end{titlepage}
+  
+	\center % Centre everything on the abstract page
+
+  	{\huge\bfseries $title$}\\[2cm] % Title of your document
+
+  	{\large\bfseries Abstract}\\[0.4cm] % Title of your document
+
+$abstract$
+  
+  \end{frontmatter}
+$else$
+  \begin{titlepage}
+  $_titlepage.tex()$
+  
+  \end{titlepage}
+  
+
+
+$if(sperrvermerk)$
+\input{template/config/Sperrvermerk.tex}
+\clearpage
+$endif$
+$if(gendervermerk)$
+\input{template/config/Gendererklaerung.tex}
+\clearpage
+$endif$
+
+$endif$ % Im Anschluss darf es keine Leerzeile geben!!!

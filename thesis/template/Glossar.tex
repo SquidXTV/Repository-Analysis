@@ -1,0 +1,20 @@
+% Glossardatei für die FHDW-Quarto-Vorlage
+% Bitte nur Zeilen zwischen den Kommentarzeilen % 1. und % 2. einfügen
+\subsection*{Glossar}
+\addcontentsline{toc}{subsection}{Glossar}
+\fancyhead[L]{Glossar}
+\begingroup
+\renewcommand{\arraystretch}{1.5}
+\begin{tabularx}{\textwidth}{lX}
+% 1. ----- ab hier stehen die Glossareinträge
+
+FHDW & Fachhochschule der Wirtschaft \\
+Gummy & Dies ist ein etwas längerer Glossareintrag, der eigentlich \textit{Dummy} heissen sollte, aber wegen der alphabetischen Reihenfolge anders benannt werden musste. Ob die Glossareinträge in der Datei \texttt{Glossar.tex} durch eine zusätzliche Leerzeile im Quelltext getrennt werden ist für Quarto bzw. \LaTeX{} gleichgültig. Eine zusätzliche Leerzeile könnte aber die Lesbarkeit verbessern.\\
+
+VDI & Verein deutscher Ingenieure \\
+
+% 2. ----- hier enden die Glossareinträge
+\end{tabularx}
+\endgroup
+\newpage
+\fancyhead[L]{\slshape\nouppercase\leftmark}

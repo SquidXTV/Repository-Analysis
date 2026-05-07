@@ -1,0 +1,60 @@
+project:
+  title: "QArbeit"
+  render: 
+    - Thesis.qmd
+  output-dir: _output
+
+editor: visual
+
+csl: template/hochschule-bonn-rhein-sieg.csl
+bibliography: library/references.bib
+
+lang: de
+babel-lang: ngerman
+
+format:
+  pdf:
+    documentclass: scrartcl
+    lang: de
+    classoption: 
+      # - 11.5pt 
+      - 12pt 
+      - "oneside"
+      - "open=any"
+      - BCOR=12mm
+      - DIV=14
+      - parskip=half*
+      - headsepline 
+      - footsepline 
+      - pointlessnumbers
+      - liststotoc 
+      - listof=leveldown
+    papersize: A4
+    margin-left: 4cm
+    margin-right: 2cm
+    margin-top: 2.5cm
+    margin-bottom: 2.5cm
+    template-partials:
+      - "template/before-body.tex"
+      - "template/_titlepage.tex" 
+      - "template/toc.tex"
+      - "template/after-body.tex"
+    include-in-header: 
+      - "template/in-header.tex"
+    link-citations: true
+    linkcolor: black
+    citecolor: black
+    colorlinks: false
+    toc: true
+    number-sections: true
+    toc-depth: 3
+    number-depth: 3    
+    lof: true
+    lot: true
+    sperrvermerk: false # true
+    keep-tex: false #true
+    # latex-max-runs: 1
+  html: 
+    lang: de
+    reference-location: margin
+    mainfont: Georgia, Palatino, Baskerville

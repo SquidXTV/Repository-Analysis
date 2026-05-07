@@ -1,0 +1,88 @@
+---
+titlepage-logo: "img/fhdw.png"
+
+#############################################################
+### Die folgenden Angaben in den Variablen bitte anpassen:
+Organisation: FHDW Paderborn
+Studiengang: Angewandte Informatik (B.Sc.)
+# Dokumententyp: "Bachelorthesis" # oder: "Praxisarbeit" etc.
+Dokumententyp: "Studienarbeit im Modul 'Hypothetische Firlefanzfinanzierung'"
+Titel: Exemplarisches Beispiel für eine Demonstration von Quarto
+Verfasser: | # für Titelseite
+  \textbf{Friedrich Fleißigerstudent}\
+  Fürstenallee 3-6\
+  33102 Paderborn
+Pruefer: | 
+  Prof. Dr. Weis-Alles\
+  Prof. Dr. Besser\
+Abgabedatum: 2026-54-32
+
+# für Ehrenwörtliche Erklärung
+Autor: Friedrich Fleißigerstudent 
+AutorUnterschrift: "img/Mustermann.png"
+Ort: Paderborn
+
+# für Sperrvermerk...
+Kooperationsunternehmen: Wieauchimmer\-IstGeheim GmbH
+##########################################################
+
+jupyter: python3
+lang: de-De
+format:
+  pdf:
+    default: true
+    sperrvermerk: false # true #
+    gendervermerk: true #false #
+    glossar: true #false #
+    keep-tex: false #true #
+    latex-tinytex: false #true #  
+  html:
+    lang: de
+---
+
+<!-- Das Dokument beginnt hier: -->
+
+<!-- Mittels include-Anweisungen werden weitere qmd-Dateien eingebunden -->
+
+{{< include chapter/MeineArbeit01.qmd >}}
+
+{{< include chapter/MeineArbeit02.qmd >}}
+
+<!-- Anhang ### Den folgenden Code-Block nicht entfernen!!!  -->
+
+\appendix
+\renewcommand{\thefigure}{A\arabic{figure}}
+\renewcommand{\thetable}{A\arabic{table}}
+\setcounter{figure}{0}
+\setcounter{table}{0}
+
+# Erster Anhang
+
+Dieser Code-Block kann verwendet werden, um die aktuell aktive Python-Installation zu bestimmen.[^1]
+
+[^1]: [@koflerPythonGrundkurs2018]
+
+```{python}
+#| eval: true
+#| code-line-numbers: true
+import sys
+print(sys.executable)
+print(sys.version)
+```
+
+# Zweiter Anhang
+
+Der zweite Anhang enthält eine Tabelle:
+
+| Col1 | Col2 | Col3 |
+|------|------|------|
+| 1    | 2    | 3    |
+| 4    | 5    | 6    |
+| 7    | 8    | 9    |
+
+: Alle Zahlen von 1..9
+
+# Quellen {.unnumbered}
+
+::: {#refs}
+:::

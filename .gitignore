@@ -2,3 +2,4 @@
 extract.html
 extract_files/*
 data/orientdb/*
+_environment.local

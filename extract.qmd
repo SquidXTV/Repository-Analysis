@@ -29,7 +29,7 @@ authentication = HTTPBasicAuth(ORIENTDB_USER, ORIENTDB_PASSWORD)
 orient_session = requests.Session()
 ```
 
-### OrientDB API
+### OrientDB REST API
 
 ```{python}
 def post(endpoint, body=None):

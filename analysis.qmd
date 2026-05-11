@@ -1,0 +1,36 @@
+---
+title: GitHub Repository Activity Analysis
+format: html
+---
+
+## Libraries & Imports
+
+```{python}
+pip install requests
+```
+
+```{python}
+import requests
+from requests.auth import HTTPBasicAuth
+```
+
+## OrientDB
+### OrientDB Configuration
+
+```{python}
+ORIENTDB_HOST = 'http://localhost:2480'
+ORIENTDB_USER = 'ROOT'
+ORIENTDB_PASSWORD = 'fhdw'
+
+authentication = HTTPBasicAuth(ORIENTDB_USER, ORIENTDB_PASSWORD)
+orient_session = requests.Session()
+```
+
+### OrientDB REST API
+```{python}
+def post(endpoint, body=None):
+    return orient_session.post(f"{ORIENTDB_HOST}{endpoint}", auth=authentication, json=body)
+
+def get(endpoint):
+    return orient_session.get(f"{ORIENTDB_HOST}{endpoint}", auth=authentication)
+```

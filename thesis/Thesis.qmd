@@ -9,17 +9,16 @@ Studiengang: Angewandte Informatik (B.Sc.)
 Dokumententyp: "Studienarbeit im Modul 'Hypothetische Firlefanzfinanzierung'"
 Titel: Exemplarisches Beispiel für eine Demonstration von Quarto
 Verfasser: | # für Titelseite
-  \textbf{Friedrich Fleißigerstudent}\
-  Fürstenallee 3-6\
+  \textbf{Connor Schweighöfer}\
+  Riemekestraße 5\
   33102 Paderborn
 Pruefer: | 
-  Prof. Dr. Weis-Alles\
-  Prof. Dr. Besser\
-Abgabedatum: 2026-54-32
+  Prof. Dr. U. Reus
+Abgabedatum: 2026-06-26
 
 # für Ehrenwörtliche Erklärung
-Autor: Friedrich Fleißigerstudent 
-AutorUnterschrift: "img/Mustermann.png"
+Autor: Connor Schweighöfer
+AutorUnterschrift: "img/signature.png"
 Ort: Paderborn
 
 # für Sperrvermerk...

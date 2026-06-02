@@ -3,5 +3,5 @@ analysis.html
 analysis_files/*
 extract.html
 extract_files/*
-data/orientdb/*
+data/orientdb/OSystem/*
 _environment.local

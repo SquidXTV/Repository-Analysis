@@ -10,13 +10,13 @@ services:
       - ./data/jupyter:/home/jovyan/work/
     environment:
       JUPYTER_ENABLE_LAB: "yes"
-      JUPYTER_TOKEN: "fhdw" 
-      RESTARTABLE: "yes" 
-    depends_on: 
+      JUPYTER_TOKEN: "fhdw"
+      RESTARTABLE: "yes"
+    depends_on:
       - orientdb
   orientdb:
     container_name: orientdb
-    image: orientdb:3.2.51
+    image: orientdb:3.2.53
     ports:
       - "2424:2424"
       - "2480:2480"

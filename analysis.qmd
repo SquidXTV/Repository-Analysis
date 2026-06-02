@@ -12,6 +12,10 @@ pip install requests
 ```{python}
 import requests
 from requests.auth import HTTPBasicAuth
+from urllib.parse import quote
+from datetime import datetime, timedelta, timezone
+import pandas as pd
+import matplotlib.pyplot as plt
 ```
 
 ## OrientDB
@@ -33,4 +37,75 @@ def post(endpoint, body=None):
 
 def get(endpoint):
     return orient_session.get(f"{ORIENTDB_HOST}{endpoint}", auth=authentication)
+
+def query(database, query, limit = 10):
+    response = get(f'/query/{database}/sql/{quote(query)}/{limit}')
+    
+    if response.status_code == 400:
+        print(f"Failed to execute {query} on {database}.")
+        return
+
+    return response.json()
+```
+
+## Analysis
+
+### Pull Requests per Week per Repository
+#### Query:
+```{python}
+today = datetime.now(timezone.utc)
+start = today - timedelta(weeks=52)
+
+today_iso = today.strftime('%Y-%m-%d')
+start_iso = start.strftime('%Y-%m-%d')
+
+pr_per_week_query = f"""
+SELECT
+  repo_id,
+  week,
+  COUNT(*) AS prs_merged
+FROM (
+  SELECT
+  	repo_id,
+    date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'").format('yyyy-ww') AS week
+  FROM pull_requests
+  WHERE date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")
+        BETWEEN date('{start_iso}', "yyyy-MM-dd")
+            AND date('{today_iso}', "yyyy-MM-dd")
+)
+GROUP BY repo_id, week
+ORDER BY repo_id, week ASC
+"""
+
+pr_per_week_result = query('github', pr_per_week_query, limit=1000000)['result']
+```
+
+#### Visualization
+```{python}
+df = pd.DataFrame(pr_per_week_result)
+df['week_start'] = pd.to_datetime(
+    df["week"] + "-1",
+    format="%Y-%W-%w"
+)
+
+df = df.sort_values("week_start")
+
+pivot = df.pivot(
+    index = "week_start",
+    columns = "repo_id",
+    values = "prs_merged"
+).fillna(0)
+
+fig, axes = plt.subplots(figsize=(12, 6))
+pivot.plot(ax=axes, alpha=0.7)
+
+axes.set_title("Merged PRs per week per repository for the last year")
+axes.set_xlabel("Week")
+axes.set_ylabel("Number of merged PRs")
+axes.grid(True, linestyle="--", alpha=0.3)
+axes.legend().remove()
+
+fig.autofmt_xdate()
+plt.tight_layout()
+plt.show()
 ```

@@ -8,6 +8,7 @@ format: html
 ```{python}
 pip install requests
 ```
+from IPython.core.pylabtools import figsize
 
 ```{python}
 import requests
@@ -39,7 +40,7 @@ def get(endpoint):
     return orient_session.get(f"{ORIENTDB_HOST}{endpoint}", auth=authentication)
 
 def query(database, query, limit = 10):
-    response = get(f'/query/{database}/sql/{quote(query)}/{limit}')
+    response = get(f'/query/{database}/sql/{quote(query, safe="")}/{limit}')
     
     if response.status_code == 400:
         print(f"Failed to execute {query} on {database}.")
@@ -51,61 +52,94 @@ def query(database, query, limit = 10):
 ## Analysis
 
 ### Pull Requests per Week per Repository
-#### Query:
+#### Query
 ```{python}
-today = datetime.now(timezone.utc)
-start = today - timedelta(weeks=52)
+def prs_per_week():
+    pr_per_week_query = f"""
+    SELECT
+        repo_id,
+        date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'").format('yyyy-ww') AS week,
+        COUNT(*) AS merged_prs
+    FROM pull_requests
+    GROUP BY repo_id, week
+    ORDER BY repo_id, week
+    """
 
-today_iso = today.strftime('%Y-%m-%d')
-start_iso = start.strftime('%Y-%m-%d')
+    return query('github', pr_per_week_query, limit=1000000)['result']
 
-pr_per_week_query = f"""
-SELECT
-  repo_id,
-  week,
-  COUNT(*) AS prs_merged
-FROM (
-  SELECT
-  	repo_id,
-    date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'").format('yyyy-ww') AS week
-  FROM pull_requests
-  WHERE date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")
-        BETWEEN date('{start_iso}', "yyyy-MM-dd")
-            AND date('{today_iso}', "yyyy-MM-dd")
-)
-GROUP BY repo_id, week
-ORDER BY repo_id, week ASC
-"""
-
-pr_per_week_result = query('github', pr_per_week_query, limit=1000000)['result']
+pr_per_week_result = prs_per_week()
 ```
 
 #### Visualization
 ```{python}
-df = pd.DataFrame(pr_per_week_result)
-df['week_start'] = pd.to_datetime(
-    df["week"] + "-1",
-    format="%Y-%W-%w"
-)
+def visualize_prs_per_week():
+    df = pd.DataFrame(pr_per_week_result)
+    df = df[['repo_id', 'week', 'merged_prs']]
 
-df = df.sort_values("week_start")
+    df = df.sort_values(['week', 'repo_id'])
 
-pivot = df.pivot(
-    index = "week_start",
-    columns = "repo_id",
-    values = "prs_merged"
-).fillna(0)
+    pivot = df.pivot(index='week', columns='repo_id', values='merged_prs')
+    axes = pivot.plot(figsize=(8, 6), legend=False)
 
-fig, axes = plt.subplots(figsize=(12, 6))
-pivot.plot(ax=axes, alpha=0.7)
+    axes.set_xlabel('Week')
+    axes.set_ylabel('Merged PRs')
+    axes.set_title('Merged pull requests per week per repository')
 
-axes.set_title("Merged PRs per week per repository for the last year")
-axes.set_xlabel("Week")
-axes.set_ylabel("Number of merged PRs")
-axes.grid(True, linestyle="--", alpha=0.3)
-axes.legend().remove()
+    plt.tight_layout()
+    plt.show()
 
-fig.autofmt_xdate()
-plt.tight_layout()
-plt.show()
+visualize_prs_per_week()
+```
+
+
+### Repository stars vs average weekly merged PRs
+#### Query
+```{python}
+def average_prs_per_week():
+    average_prs_per_week_query = """
+    SELECT
+        id,
+        full_name,
+        stars,
+        $stats[0].total_prs_merged / ($timespan / $week_ms + 1) AS average_prs_per_week
+    FROM repositories
+    LET
+        $stats = (
+            SELECT
+                min(date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")) AS first_merged_pr,
+                max(date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")) AS last_merged_pr,
+                count(*) AS total_prs_merged
+            FROM pull_requests
+            WHERE repo_id = $parent.$current.id
+        ),
+        $timespan = ($stats[0].last_merged_pr.asLong() - $stats[0].first_merged_pr.asLong()),
+        $week_ms = (1000 * 60 * 60 * 24 * 7)
+    WHERE $stats[0].total_prs_merged > 1
+    ORDER BY average_prs_per_week ASC
+    """
+
+    return query('github', average_prs_per_week_query, limit=1000000)['result']
+
+average_prs_per_week_result = average_prs_per_week()
+```
+
+#### Visualization
+```{python}
+def visualize_average_prs_per_week():
+    df = pd.DataFrame(average_prs_per_week_result)
+    figure, axes = plt.subplots(figsize=(8, 6))
+
+    axes.scatter(df['stars'], df['average_prs_per_week'], s=20, alpha=0.6)
+
+    axes.set_xlabel('GitHub Stars')
+    axes.set_ylabel('Average merged PRs per week')
+    axes.set_title('Repository stars vs average weekly merged PRs')
+
+    axes.set_xscale('log')
+    axes.set_yscale('log')
+
+    plt.tight_layout()
+    plt.show()
+
+visualize_average_prs_per_week()
 ```

@@ -239,8 +239,8 @@ create_class(DATABASE, PULL_REQUESTS)
 ## Query GitHub API and insert into Database
 
 ```{python}
-REPOSITORY_COUNT = 100
-PRS_PER_REPO = 200
+REPOSITORY_COUNT = 50
+PRS_PER_REPO = 1200
 
 if (not is_empty(DATABASE, REPOSITORIES)):
     print("Class 'repositories' already filled with records. Skipping import.")

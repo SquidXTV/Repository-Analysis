@@ -14,7 +14,6 @@ from IPython.core.pylabtools import figsize
 import requests
 from requests.auth import HTTPBasicAuth
 from urllib.parse import quote
-from datetime import datetime, timedelta, timezone
 import pandas as pd
 import matplotlib.pyplot as plt
 ```
@@ -127,19 +126,75 @@ average_prs_per_week_result = average_prs_per_week()
 ```{python}
 def visualize_average_prs_per_week():
     df = pd.DataFrame(average_prs_per_week_result)
-    figure, axes = plt.subplots(figsize=(8, 6))
+    figure, axes = plt.subplots(1, 2, figsize=(8, 6))
 
-    axes.scatter(df['stars'], df['average_prs_per_week'], s=20, alpha=0.6)
+    axes_linear = axes[0]
+    axes_linear.scatter(df['stars'], df['average_prs_per_week'], s=20, alpha=0.6)
+    axes_linear.set_xlabel('GitHub Stars')
+    axes_linear.set_ylabel('Average merged PRs per week')
+    axes_linear.set_title('Repository stars vs average weekly merged PRs')
 
-    axes.set_xlabel('GitHub Stars')
-    axes.set_ylabel('Average merged PRs per week')
-    axes.set_title('Repository stars vs average weekly merged PRs')
+    axes_log = axes[1]
+    axes_log.scatter(df['stars'], df['average_prs_per_week'], s=20, alpha=0.6)
+    axes_log.set_xlabel('GitHub Stars')
+    axes_log.set_ylabel('Average merged PRs per week')
+    axes_log.set_title('Repository stars vs average weekly merged PRs')
 
-    axes.set_xscale('log')
-    axes.set_yscale('log')
+    axes_log.set_xscale('log')
+    axes_log.set_yscale('log')
 
     plt.tight_layout()
     plt.show()
 
 visualize_average_prs_per_week()
+```
+
+
+### Average Weekly Merged PRs per Language
+#### Query
+```{python}
+def average_merged_prs_per_week_per_language():
+    average_merged_prs_per_week_per_language_query = """
+    SELECT
+		language,
+        avg($stats[0].total_prs_merged / ($timespan / $week_ms + 1)) AS average_prs_per_week
+    FROM repositories
+    LET
+        $stats = (
+            SELECT
+                min(date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")) AS first_merged_pr,
+                max(date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")) AS last_merged_pr,
+                count(*) AS total_prs_merged
+            FROM pull_requests
+            WHERE repo_id = $parent.$current.id
+        ),
+        $timespan = ($stats[0].last_merged_pr.asLong() - $stats[0].first_merged_pr.asLong()),
+        $week_ms = (1000 * 60 * 60 * 24 * 7)
+    WHERE $stats[0].total_prs_merged > 1
+    GROUP BY language
+    """
+
+    return query('github', average_merged_prs_per_week_per_language_query, limit=1000000)['result']
+
+average_merged_prs_per_week_per_language_result = average_merged_prs_per_week_per_language()
+```
+
+#### Visualization
+```{python}
+def visualize_language_bubbles():
+    df = pd.DataFrame(average_merged_prs_per_week_per_language_result)
+    df['language'] = df['language'].fillna('Others')
+    df = df.sort_values('average_prs_per_week', ascending=True)
+
+    figure, axes = plt.subplots(figsize=(8, 6))
+
+    axes.barh(df['language'], df['average_prs_per_week'], color='steelblue', alpha=0.8)
+    axes.set_xlabel('Average merged PRs per week')
+    axes.set_ylabel('Language')
+    axes.set_title('Average merged PRs per week per language')
+
+    plt.tight_layout()
+    plt.show()
+
+visualize_language_bubbles()
 ```

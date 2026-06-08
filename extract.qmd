@@ -3,8 +3,6 @@ title: Extract Data From GitHub API
 format: html
 ---
 
-<!-- ToDo: Export final database and import database from json -->
-
 ## Libraries & Imports
 
 ```{python}
@@ -45,6 +43,9 @@ class OrientDB:
     def post(self, endpoint, body = None):
         return self.session.post(f"{self.host}{endpoint}", auth=self.authentication, json=body)
     
+    def command(self, command):
+        return self.post(f"/command/{self.database}/sql", command)
+
     def create_if_not_exist(self):
         response = self.post(f"/database/{self.database}/plocal")
 
@@ -325,4 +326,18 @@ def import_data():
         insert_into_database(query_data_from_api())
 
 import_data()
+```
+
+### Add Schema Property for repo_id
+```{python}
+database.command({
+    "command": "CREATE PROPERTY pull_requests.repo_id STRING"
+}).json()
+```
+
+### Add Index for pull request by repo id lookup
+```{python}
+database.command({
+    "command": "CREATE INDEX pull_requests.repo_id NOTUNIQUE_HASH_INDEX"
+}).json()
 ```

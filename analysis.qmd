@@ -19,45 +19,97 @@ import matplotlib.pyplot as plt
 
 
 ## OrientDB
-### OrientDB Configuration
 
+### OrientDB Configuration
 ```{python}
 ORIENTDB_HOST = 'http://localhost:2480'
 ORIENTDB_USER = 'ROOT'
 ORIENTDB_PASSWORD = 'fhdw'
-
-authentication = HTTPBasicAuth(ORIENTDB_USER, ORIENTDB_PASSWORD)
-orient_session = requests.Session()
-
-DATABASE = "github"
+ORIENTDB_DATABASE = 'github'
 ```
 
-### OrientDB REST API
+### OrientDB REST API Wrapper
 ```{python}
-def post(endpoint, body=None):
-    return orient_session.post(f"{ORIENTDB_HOST}{endpoint}", auth=authentication, json=body)
+class OrientDB:
 
-def get(endpoint):
-    return orient_session.get(f"{ORIENTDB_HOST}{endpoint}", auth=authentication)
-
-def query(query):
-    response = get(f'/query/{DATABASE}/sql/{quote(query, safe="")}/{1000000}')
+    def __init__(self, host: str, user: str, password: str, database: str):
+        self.host = host
+        self.authentication = HTTPBasicAuth(user, password)
+        self.session = requests.Session()
+        self.database = database
     
-    if response.status_code == 400:
-        print(f"Failed to execute {query} on {DATABASE}.")
-        return
+    def get(self, endpoint: str):
+        return self.session.get(f"{self.host}{endpoint}", auth=self.authentication)
+    
+    def post(self, endpoint, body = None):
+        return self.session.post(f"{self.host}{endpoint}", auth=self.authentication, json=body)
 
-    return response.json()
+    def query(self, query):
+        response = self.get(f'/query/{self.database}/sql/{quote(query, safe="")}/{1000000}')
+    
+        if response.status_code == 400:
+            print(f"Failed to execute {query} on {self.database}.")
+            return
+
+        return response.json()
+
+    def command(self, command):
+        return self.post(f"/command/{self.database}/sql", command)
+    
+    def function_exists(self, name):
+        response = self.query(f"SELECT FROM OFunction WHERE name = '{name}'")
+        return len(response['result']) != 0
+
+database = OrientDB(ORIENTDB_HOST, ORIENTDB_USER, ORIENTDB_PASSWORD, ORIENTDB_DATABASE)
 ```
+
+
+## OrientDB Function for Average Weekly Merged PRS
+```{python}
+if not database.function_exists('averageWeeklyMergedPRs'):
+    function_body = (
+        "SELECT "
+        "  total / ($timespan / $week_ms + 1) AS average_weekly_merged_prs "
+        "FROM $stats "
+        "LET "
+        "  $stats = ("
+        "    SELECT "
+        "      count(*) AS total, "
+        "      min(date(merged_at, 'yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'')) AS first_merged_pr, "
+        "      max(date(merged_at, 'yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'')) AS last_merged_pr "
+        "    FROM pull_requests "
+        "    WHERE repo_id = :repo_id "
+        "    PARALLEL"
+        "  ), "
+        "  $timespan = last_merged_pr.asLong() - first_merged_pr.asLong(), "
+        "  $week_ms = 1000 * 60 * 60 * 24 * 7 "
+        "WHERE total > 1"
+    )
+
+    response = database.command({
+        "command": f"""
+        CREATE FUNCTION averageWeeklyMergedPRs "{function_body}"
+        PARAMETERS [repo_id]
+        IDEMPOTENT true
+        LANGUAGE SQL
+        """
+    })
+
+    print(response.json())
+else:
+    print('Function already exists, skipping creation')
+```
+
 
 
 ## Analysis
 
 ### Repositories
+
 #### Query
 ```{python}
 def repositories():
-    repository_query = f"""
+    query = f"""
     SELECT
         full_name,
         description,
@@ -67,7 +119,7 @@ def repositories():
     ORDER BY stars desc
     """
 
-    return query(repository_query)['result']
+    return database.query(query)['result']
 
 repositories_result = repositories()
 ```
@@ -78,44 +130,46 @@ pd.DataFrame(repositories_result)
 ```
 
 
-### Pull Requests per Week per Repository
+### Pull Requests Timeline
+
 #### Query
 ```{python}
-def prs_per_week():
-    pr_per_week_query = f"""
+def pull_request_timeline():
+    query = f"""
     SELECT
         repo_id,
         date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'").format('yyyy-ww') AS week,
         COUNT(*) AS merged_prs
     FROM pull_requests
     GROUP BY repo_id, week
-    ORDER BY repo_id, week
     """
 
-    return query(pr_per_week_query)['result']
+    return database.query(query)['result']
 
-pr_per_week_result = prs_per_week()
+pull_request_timeline_result = pull_request_timeline()
 ```
 
 #### Visualization
 ```{python}
-def visualize_prs_per_week():
-    df = pd.DataFrame(pr_per_week_result)
+def visualize_pull_request_timeline():
+    df = pd.DataFrame(pull_request_timeline_result)
     df = df[['repo_id', 'week', 'merged_prs']]
 
     df = df.sort_values(['week', 'repo_id'])
 
     pivot = df.pivot(index='week', columns='repo_id', values='merged_prs')
+    pivot = pivot.fillna(0)
+
     axes = pivot.plot(figsize=(8, 6), legend=False)
 
     axes.set_xlabel('Week')
     axes.set_ylabel('Merged PRs')
-    axes.set_title('Merged pull requests per week per repository')
+    axes.set_title('Pull Request Timeline')
 
     plt.tight_layout()
     plt.show()
 
-visualize_prs_per_week()
+visualize_pull_request_timeline()
 ```
 
 
@@ -128,24 +182,12 @@ def average_prs_per_week():
         id,
         full_name,
         stars,
-        $stats[0].total_prs_merged / ($timespan / $week_ms + 1) AS average_prs_per_week
+        ifnull(averageWeeklyMergedPRs(id)[0].average_weekly_merged_prs, 0) AS average_prs_per_week
     FROM repositories
-    LET
-        $stats = (
-            SELECT
-                min(date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")) AS first_merged_pr,
-                max(date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")) AS last_merged_pr,
-                count(*) AS total_prs_merged
-            FROM pull_requests
-            WHERE repo_id = $parent.$current.id
-        ),
-        $timespan = ($stats[0].last_merged_pr.asLong() - $stats[0].first_merged_pr.asLong()),
-        $week_ms = (1000 * 60 * 60 * 24 * 7)
-    WHERE $stats[0].total_prs_merged > 1
-    ORDER BY average_prs_per_week ASC
+    PARALLEL
     """
 
-    return query(average_prs_per_week_query)['result']
+    return database.query(average_prs_per_week_query)['result']
 
 average_prs_per_week_result = average_prs_per_week()
 ```
@@ -154,7 +196,7 @@ average_prs_per_week_result = average_prs_per_week()
 ```{python}
 def visualize_average_prs_per_week():
     df = pd.DataFrame(average_prs_per_week_result)
-    figure, axes = plt.subplots(1, 2, figsize=(8, 6))
+    figure, axes = plt.subplots(1, 2, figsize=(12, 6))
 
     axes_linear = axes[0]
     axes_linear.scatter(df['stars'], df['average_prs_per_week'], s=20, alpha=0.6)
@@ -185,24 +227,15 @@ def average_merged_prs_per_week_per_language():
     average_merged_prs_per_week_per_language_query = """
     SELECT
 		language,
-        avg($stats[0].total_prs_merged / ($timespan / $week_ms + 1)) AS average_prs_per_week
+        avg($average_weekly_merged_prs) AS average_prs_per_week
     FROM repositories
     LET
-        $stats = (
-            SELECT
-                min(date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")) AS first_merged_pr,
-                max(date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'")) AS last_merged_pr,
-                count(*) AS total_prs_merged
-            FROM pull_requests
-            WHERE repo_id = $parent.$current.id
-        ),
-        $timespan = ($stats[0].last_merged_pr.asLong() - $stats[0].first_merged_pr.asLong()),
-        $week_ms = (1000 * 60 * 60 * 24 * 7)
-    WHERE $stats[0].total_prs_merged > 1
+        $average_weekly_merged_prs = ifnull(averageWeeklyMergedPRs(id)[0].average_weekly_merged_prs, 0)
     GROUP BY language
+    PARALLEL
     """
 
-    return query(average_merged_prs_per_week_per_language_query)['result']
+    return database.query(average_merged_prs_per_week_per_language_query)['result']
 
 average_merged_prs_per_week_per_language_result = average_merged_prs_per_week_per_language()
 ```

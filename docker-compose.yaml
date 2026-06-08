@@ -12,6 +12,7 @@ services:
       JUPYTER_ENABLE_LAB: "yes"
       JUPYTER_TOKEN: "fhdw"
       RESTARTABLE: "yes"
+      GITHUB_TOKEN: ${GITHUB_TOKEN}
     depends_on:
       - orientdb
   orientdb:

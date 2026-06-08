@@ -3,6 +3,8 @@ title: Extract Data From GitHub API
 format: html
 ---
 
+<!-- ToDo: Export final database and import database from json -->
+
 ## Libraries & Imports
 
 ```{python}
@@ -14,247 +16,266 @@ import os
 import json
 import requests
 from requests.auth import HTTPBasicAuth
-# from typing import Callable, Dict, List, Tuple, Any
 ```
 
 
 ## OrientDB
-### OrientDB Configuration
 
+### OrientDB Configuration
 ```{python}
 ORIENTDB_HOST = 'http://localhost:2480'
 ORIENTDB_USER = 'ROOT'
 ORIENTDB_PASSWORD = 'fhdw'
-
-authentication = HTTPBasicAuth(ORIENTDB_USER, ORIENTDB_PASSWORD)
-orient_session = requests.Session()
+ORIENTDB_DATABASE = 'github'
 ```
 
-### OrientDB REST API
-
+### OrientDB REST API Wrapper
 ```{python}
-def post(endpoint, body=None):
-    return orient_session.post(f"{ORIENTDB_HOST}{endpoint}", auth=authentication, json=body)
+class OrientDB:
 
-def get(endpoint):
-    return orient_session.get(f"{ORIENTDB_HOST}{endpoint}", auth=authentication)
+    def __init__(self, host: str, user: str, password: str, database: str):
+        self.host = host
+        self.authentication = HTTPBasicAuth(user, password)
+        self.session = requests.Session()
+        self.database = database
 
-def create_database(name):
-    response = post(f"/database/{name}/plocal")
+    def get(self, endpoint: str):
+        return self.session.get(f"{self.host}{endpoint}", auth=self.authentication)
+    
+    def post(self, endpoint, body = None):
+        return self.session.post(f"{self.host}{endpoint}", auth=self.authentication, json=body)
+    
+    def create_if_not_exist(self):
+        response = self.post(f"/database/{self.database}/plocal")
 
-    if (response.status_code == 200):
-        print(f"Database '{name}' created successfully.")
-    elif (response.status_code == 409):
-        print(response.json()['errors'][0]['content'])
+        if (response.status_code == 200):
+            print(f"Database '{self.database}' created successfully.")
+        elif (response.status_code == 409):
+            print(response.json()['errors'][0]['content'])
+    
+    def add_class(self, name):
+        response = self.post(f"/class/{self.database}/{name}")
 
-def create_class(database, name):
-    response = post(f"/class/{database}/{name}")
+        if (response.status_code == 201):
+            print(f"Class '{name}' created successfully.")
+        elif (response.status_code == 500):
+            print(response.json()['errors'][0]['content'])
 
-    if (response.status_code == 201):
-        print(f"Class '{name}' created successfully.")
-    elif (response.status_code == 500):
-        print(response.json()['errors'][0]['content'])
+    def get_class(self, name):
+        return self.get(f"/class/{self.database}/{name}").json()
+    
+    def is_empty(self, class_name):
+        return self.get_class(class_name)['records'] == 0
 
-def get_class(database, name):
-    return get(f"/class/{database}/{name}").json()
+    def add_document(self, class_name, body):
+        document = {
+            "@class": class_name,
+            **body
+        }
 
-def add_document(database, database_class, body):
-    document = {
-        "@class": database_class,
-        **body
-    }
+        self.post(f"/document/{self.database}", document)
+    
+    def batch_create(self, documents):
+        batch = {
+            "transaction": True,
+            "operations": [{"type": "c", "record": document} for document in documents]
+        }
 
-    post(f"/document/{database}", document)
+        self.post(f"/batch/{self.database}", batch)
+    
+    def import_from_json(self, exported):
+        return self.post(f"/import/{self.database}", exported)
 
-def batch_create(database, documents):
-    batch = {
-        "transaction": True,
-        "operations": [{"type": "c", "record": document} for document in documents]
-    }
-
-    post(f"/batch/{database}", batch)
-
-def is_empty(database, table):
-    return get_class(database, table)['records'] == 0
+database = OrientDB(ORIENTDB_HOST, ORIENTDB_USER, ORIENTDB_PASSWORD, ORIENTDB_DATABASE)
 ```
+
 
 ## GitHub
-### GitHub Configuration
 
+### GitHub Configuration
 ```{python}
 GITHUB_GRAPHQL_URL = 'https://api.github.com/graphql'
 GITHUB_TOKEN = os.environ['GITHUB_TOKEN']
-GITHUB_HEADERS = {
-    'Authorization': f"Bearer {GITHUB_TOKEN}",
-    'Accept': 'application/vnd.github+json',
-    'X-GitHub-Api-Version': '2026-03-10'
-}
 ```
 
 ### GitHub GraphQL API
-
 ```{python}
-def paginate_query(query: str, count: int, extract, variable_to_paginate: str, additional_variables = {}, per_page: int = 25):
-    items = []
-    after = None
+class GitHubClient:
 
-    while len(items) < count:
-        variables = {
-            variable_to_paginate: min(count - len(items), per_page),
-            **additional_variables,
-            "after": after
+    def __init__(self, url: str, token: str):
+        self.url = url
+        self.session = requests.Session()
+        self.headers = {
+            'Authorization': f"Bearer {token}",
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2026-03-10'
         }
 
-        response = requests.post(
-            GITHUB_GRAPHQL_URL,
-            headers=GITHUB_HEADERS,
-            json={"query": query, "variables": variables},
-        )
+    def post(self, query, variables):
+        response = self.session.post(self.url, headers=self.headers, json={"query": query, "variables": variables})
 
         try:
             response.raise_for_status()
         except requests.HTTPError:
-            print(f"Failed to paginate query with graphql, status {response.status_code}")
+            print(f"GitHub GraphQL request failed with status {response.status_code}")
             print("Body:", response.text)
             raise
-
+        
         payload = response.json()
 
         if ('errors' in payload):
-            print("GraphQL errors: ", json.dumps(payload, indent=2))
+            print("GraphQL errors:", json.dumps(payload, indent=2))
             raise ValueError("GitHub GraphQL API returned errors")
-
-        nodes, info = extract(payload['data'])
         
-        items.extend(nodes)
+        return payload
 
-        after = info['endCursor']
-        has_next = info['hasNextPage']
-        if not has_next:
-            break
-    
-    return items
-```
+    def paginate(self, query, count, extract, variable_to_paginate, additional_variables = {}, per_page = 25):
+        items = []
+        after = None
 
-#### Repositories
-```{python}
-def repositories(count: int):
-    query = """
-    query TopRepositories($numberOfRepositories: Int!, $after: String) {
-        search(
-            type: REPOSITORY
-            query: "stars:>0 sort:stars-desc"
-            first: $numberOfRepositories
-            after: $after
-        ) {
-            pageInfo {
-                hasNextPage
-                endCursor
+        while len(items) < count:
+            variables = {
+                variable_to_paginate: min(count - len(items), per_page),
+                **additional_variables,
+                "after": after
             }
-            edges {
-                node {
-                    ... on Repository {
-                        id
-                        name
-                        nameWithOwner
-                        url
-                        description
-                        owner {
-                            login
-                        }
-                        stargazerCount
-                        primaryLanguage {
+
+            payload = self.post(query, variables)
+            nodes, info = extract(payload['data'])
+        
+            items.extend(nodes)
+
+            after = info['endCursor']
+            has_next = info['hasNextPage']
+            if not has_next:
+                break
+
+        return items
+    
+    def top_repositories(self, count):
+        query = """
+        query TopRepositories($numberOfRepositories: Int!, $after: String) {
+            search(
+                type: REPOSITORY
+                query: "stars:>0 sort:stars-desc"
+                first: $numberOfRepositories
+                after: $after
+            ) {
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
+                edges {
+                    node {
+                        ... on Repository {
+                            id
                             name
+                            nameWithOwner
+                            url
+                            description
+                            owner {
+                                login
+                            }
+                            stargazerCount
+                            primaryLanguage {
+                                name
+                            }
                         }
                     }
                 }
             }
         }
-    }
-    """
+        """
 
-    def extract(data):
-        result = data['search']
-        page_info = result['pageInfo']
-        nodes = [edge["node"] for edge in result["edges"]]
-        return nodes, page_info
+        def extract(data):
+            result = data['search']
+            page_info = result['pageInfo']
+            nodes = [edge["node"] for edge in result["edges"]]
+            return nodes, page_info
 
-    return paginate_query(query, count, extract, "numberOfRepositories", per_page=100)
-```
-
-```{python}
-def pull_requests(repos, count):
-    query = """
-    query LatestPullRequests($repoId: ID!, $numberOfPullRequests: Int!, $after: String) {
-        node(id: $repoId) {
-            ... on Repository {
-                pullRequests(
-                    states: MERGED
-                    orderBy: { field: UPDATED_AT, direction: DESC }
-                    first: $numberOfPullRequests
-                    after: $after
-                ) {
-                    pageInfo {
-                        hasNextPage
-                        endCursor
-                    }
-                    nodes {
-                        number
-                        title
-                        url
-                        mergedAt
+        return self.paginate(query, count, extract, "numberOfRepositories", per_page=100)
+    
+    def merged_pull_requests(self, repo_id, count):
+        query = """
+        query LatestPullRequests($repoId: ID!, $numberOfPullRequests: Int!, $after: String) {
+            node(id: $repoId) {
+                ... on Repository {
+                    pullRequests(
+                        states: MERGED
+                        orderBy: { field: UPDATED_AT, direction: DESC }
+                        first: $numberOfPullRequests
+                        after: $after
+                    ) {
+                        pageInfo {
+                            hasNextPage
+                            endCursor
+                        }
+                        nodes {
+                            number
+                            title
+                            url
+                            mergedAt
+                        }
                     }
                 }
             }
         }
-    }
-    """
-    
-    def extract(data):
-        result = data['node']['pullRequests']
-        page_info = result['pageInfo']
-        nodes = result['nodes']
-        return nodes, page_info
+        """
 
-    prs = {}
+        def extract(data):
+            result = data['node']['pullRequests']
+            page_info = result['pageInfo']
+            nodes = result['nodes']
+            return nodes, page_info
 
-    for repo in repos:
-        prs[repo] = paginate_query(query, count, extract, variable_to_paginate="numberOfPullRequests", additional_variables={"repoId": repo}, per_page=100)
+        return self.paginate(query, count, extract, variable_to_paginate="numberOfPullRequests", additional_variables={"repoId": repo_id}, per_page=100)
 
-    return prs
+github = GitHubClient(GITHUB_GRAPHQL_URL, GITHUB_TOKEN)
 ```
 
-## Database Initialization
 
+## Extract and Import
+
+### Database Initialization
 ```{python}
-DATABASE = "github"
 REPOSITORIES = "repositories"
 PULL_REQUESTS = "pull_requests"
 
-create_database(DATABASE)
-create_class(DATABASE, REPOSITORIES)
-create_class(DATABASE, PULL_REQUESTS)
+database.create_if_not_exist()
+database.add_class(REPOSITORIES)
+database.add_class(PULL_REQUESTS)
 ```
 
-## Query GitHub API and insert into Database
-
+### Query GitHub GraphQL API
 ```{python}
-REPOSITORY_COUNT = 50
-PRS_PER_REPO = 1200
+REPOSITORY_COUNT = 200
+PRS_PER_REPO = 1000
 
-if (not is_empty(DATABASE, REPOSITORIES)):
-    print("Class 'repositories' already filled with records. Skipping import.")
-else:
+def query_data_from_api():    
     print("Class 'repositories' is empty.")
     print(f"Fetching {REPOSITORY_COUNT} most starred repositories from GitHub with up to {PRS_PER_REPO} merged PRs each.")
 
-    repos = repositories(REPOSITORY_COUNT)
-    print(f"Fetched {len(repos)} repositories from GitHub.")
+    repositories = github.top_repositories(REPOSITORY_COUNT)
+    print(f"Fetched {len(repositories)} repositories from GitHub.")
 
-    pull_requests = pull_requests([repo['id'] for repo in repos], PRS_PER_REPO)
-    print(f"Fetched pull requests for each repository from GitHub.")
+    pull_requests = {}
 
-    for repo in repos:
+    for repo in repositories:
+        pull_requests[repo['id']] = github.merged_pull_requests(repo['id'], PRS_PER_REPO)
+
+    return {
+        'repositories': repositories,
+        'pull_requests': pull_requests
+    }
+```
+
+### Insert into Database
+```{python}
+def insert_into_database(data):
+    repositories = data['repositories']
+    pull_requests = data['pull_requests']
+
+    for repo in repositories:
         repo_id = repo['id']
 
         repo_entry = {
@@ -271,7 +292,7 @@ else:
         if repo.get('primaryLanguage') and repo['primaryLanguage'].get('name'):
             repo_entry['language'] = repo['primaryLanguage']['name']
         
-        batch_create(DATABASE, [repo_entry] + [
+        database.batch_create([repo_entry] + [
             {
                 "@class": PULL_REQUESTS,
                 "id": pr["number"],
@@ -282,6 +303,26 @@ else:
             }
             for pr in pull_requests[repo_id]
         ])
+
+    print(f"Finished inserting {len(repositories)} repositories and their pull requests into OrientDB.")
+```
+
+### Import data
+```{python}
+EXPORT_FILE = "exported_database.json"
+
+def import_data():
+    if not database.is_empty(REPOSITORIES):
+        print(f"Class '{REPOSITORIES}' already filled with records. Skipping import.")
+        return
     
-    print(f"Finished inserting {len(repos)} repositories and their pull requests into OrientDB.")
+    if os.path.exists(EXPORT_FILE):
+        print(f"Found '{EXPORT_FILE}', importing database from file.")
+        with open(EXPORT_FILE, "r", encoding="utf-8") as file:
+            database.import_from_json(json.load(file))
+    else:
+        print(f"'{EXPORT_FILE} not found. Fetching data from API and inserting into database")
+        insert_into_database(query_data_from_api())
+
+import_data()
 ```

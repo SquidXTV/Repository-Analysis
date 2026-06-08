@@ -1,5 +1,5 @@
 ---
-title: GitHub Repository Activity Analysis
+title: GitHub Repository Analysis
 format: html
 ---
 
@@ -8,7 +8,6 @@ format: html
 ```{python}
 pip install requests
 ```
-from IPython.core.pylabtools import figsize
 
 ```{python}
 import requests
@@ -17,6 +16,7 @@ from urllib.parse import quote
 import pandas as pd
 import matplotlib.pyplot as plt
 ```
+
 
 ## OrientDB
 ### OrientDB Configuration
@@ -28,6 +28,8 @@ ORIENTDB_PASSWORD = 'fhdw'
 
 authentication = HTTPBasicAuth(ORIENTDB_USER, ORIENTDB_PASSWORD)
 orient_session = requests.Session()
+
+DATABASE = "github"
 ```
 
 ### OrientDB REST API
@@ -38,17 +40,43 @@ def post(endpoint, body=None):
 def get(endpoint):
     return orient_session.get(f"{ORIENTDB_HOST}{endpoint}", auth=authentication)
 
-def query(database, query, limit = 10):
-    response = get(f'/query/{database}/sql/{quote(query, safe="")}/{limit}')
+def query(query):
+    response = get(f'/query/{DATABASE}/sql/{quote(query, safe="")}/{1000000}')
     
     if response.status_code == 400:
-        print(f"Failed to execute {query} on {database}.")
+        print(f"Failed to execute {query} on {DATABASE}.")
         return
 
     return response.json()
 ```
 
+
 ## Analysis
+
+### Repositories
+#### Query
+```{python}
+def repositories():
+    repository_query = f"""
+    SELECT
+        full_name,
+        description,
+        stars,
+        language
+    FROM repositories
+    ORDER BY stars desc
+    """
+
+    return query(repository_query)['result']
+
+repositories_result = repositories()
+```
+
+#### Visualization
+```{python}
+pd.DataFrame(repositories_result)
+```
+
 
 ### Pull Requests per Week per Repository
 #### Query
@@ -64,7 +92,7 @@ def prs_per_week():
     ORDER BY repo_id, week
     """
 
-    return query('github', pr_per_week_query, limit=1000000)['result']
+    return query(pr_per_week_query)['result']
 
 pr_per_week_result = prs_per_week()
 ```
@@ -117,7 +145,7 @@ def average_prs_per_week():
     ORDER BY average_prs_per_week ASC
     """
 
-    return query('github', average_prs_per_week_query, limit=1000000)['result']
+    return query(average_prs_per_week_query)['result']
 
 average_prs_per_week_result = average_prs_per_week()
 ```
@@ -174,14 +202,14 @@ def average_merged_prs_per_week_per_language():
     GROUP BY language
     """
 
-    return query('github', average_merged_prs_per_week_per_language_query, limit=1000000)['result']
+    return query(average_merged_prs_per_week_per_language_query)['result']
 
 average_merged_prs_per_week_per_language_result = average_merged_prs_per_week_per_language()
 ```
 
 #### Visualization
 ```{python}
-def visualize_language_bubbles():
+def visualize_per_language_activity():
     df = pd.DataFrame(average_merged_prs_per_week_per_language_result)
     df['language'] = df['language'].fillna('Others')
     df = df.sort_values('average_prs_per_week', ascending=True)
@@ -196,5 +224,5 @@ def visualize_language_bubbles():
     plt.tight_layout()
     plt.show()
 
-visualize_language_bubbles()
+visualize_per_language_activity()
 ```

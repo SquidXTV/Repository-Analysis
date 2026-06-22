@@ -1,0 +1,16 @@
+# OrientDB
+
+OrientDB is a multi-model NoSQL database that combines documents and graphs into a single scalable database.
+In this paper, OrientDB is primarily used for document and class-based data, rather than the graph-based database features.
+
+Data stored in OrientDB are separated in classes, which are roughly analogous to tables in relational systems. Each class
+groups documents and represent a single kind of data. OrientDB allows for schema-less, schema-full or mixed classes and
+inheritance of classes known from Object Oriented Programming (OOP).  <!-- Abkürzung -->
+Each document stored in these classes represent an object and store a group of attributes.
+
+OrientDB provides an SQL-like query language that serves as the primary interface for interacting with the database.
+Its dialect supports familiar constructs such as `SELECT`, `WHERE`, `GROUP BY`, `ORDER BY` and more.
+The database additionally supports indexing mechanisms to speed up queries. Indexes are defined on fields that
+commonly appear in `WHERE` clauses. With these indexes, queries avoid full class scans and instead access only the relevant
+subset of documents using index algorithms like SB-Tree or simple Hash Indexes. OrientDB also supports user-defined functions
+which are executable units of code that can take parameters and return a result.

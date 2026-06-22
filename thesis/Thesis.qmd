@@ -4,16 +4,15 @@ titlepage-logo: "img/fhdw.png"
 #############################################################
 ### Die folgenden Angaben in den Variablen bitte anpassen:
 Organisation: FHDW Paderborn
-Studiengang: Angewandte Informatik (B.Sc.)
-# Dokumententyp: "Bachelorthesis" # oder: "Praxisarbeit" etc.
-Dokumententyp: "Studienarbeit im Modul 'Hypothetische Firlefanzfinanzierung'"
-Titel: Exemplarisches Beispiel für eine Demonstration von Quarto
+Studiengang: Applied Computer Science (B.Sc.)
+Studiengruppe: PFAX424A
+Dokumententyp: Paper
+Titel: Analyzing GitHub Repository Popularity and Activity
 Verfasser: | # für Titelseite
   \textbf{Connor Schweighöfer}\
   Riemekestraße 5\
   33102 Paderborn
-Pruefer: | 
-  Prof. Dr. U. Reus
+Pruefer: Prof. Dr. U. Reus
 Abgabedatum: 2026-06-26
 
 # für Ehrenwörtliche Erklärung
@@ -22,7 +21,7 @@ AutorUnterschrift: "img/signature.png"
 Ort: Paderborn
 
 # für Sperrvermerk...
-Kooperationsunternehmen: Wieauchimmer\-IstGeheim GmbH
+# Kooperationsunternehmen: adesso SE
 ##########################################################
 
 jupyter: python3
@@ -30,11 +29,11 @@ lang: de-De
 format:
   pdf:
     default: true
-    sperrvermerk: false # true #
-    gendervermerk: true #false #
-    glossar: true #false #
-    keep-tex: false #true #
-    latex-tinytex: false #true #  
+    sperrvermerk: false
+    gendervermerk: false
+    glossar: false
+    keep-tex: false
+    latex-tinytex: false  
   html:
     lang: de
 ---
@@ -43,9 +42,16 @@ format:
 
 <!-- Mittels include-Anweisungen werden weitere qmd-Dateien eingebunden -->
 
-{{< include chapter/MeineArbeit01.qmd >}}
+{{< include chapter/Introduction.qmd >}}
 
-{{< include chapter/MeineArbeit02.qmd >}}
+{{< include chapter/OrientDB.qmd >}}
+
+{{< include chapter/Dataset.qmd >}}
+
+{{< include chapter/Analysis.qmd >}}
+
+{{< include chapter/Conclusion.qmd >}}
+
 
 <!-- Anhang ### Den folgenden Code-Block nicht entfernen!!!  -->
 
@@ -55,33 +61,9 @@ format:
 \setcounter{figure}{0}
 \setcounter{table}{0}
 
-# Erster Anhang
+# List of Appendices
 
-Dieser Code-Block kann verwendet werden, um die aktuell aktive Python-Installation zu bestimmen.[^1]
-
-[^1]: [@koflerPythonGrundkurs2018]
-
-```{python}
-#| eval: true
-#| code-line-numbers: true
-import sys
-print(sys.executable)
-print(sys.version)
-```
-
-# Zweiter Anhang
-
-Der zweite Anhang enthält eine Tabelle:
-
-| Col1 | Col2 | Col3 |
-|------|------|------|
-| 1    | 2    | 3    |
-| 4    | 5    | 6    |
-| 7    | 8    | 9    |
-
-: Alle Zahlen von 1..9
-
-# Quellen {.unnumbered}
+# References {.unnumbered}
 
 ::: {#refs}
 :::

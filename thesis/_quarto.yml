@@ -4,7 +4,7 @@ project:
     - Thesis.qmd
   output-dir: _output
 
-editor: visual
+editor: source
 
 csl: template/hochschule-bonn-rhein-sieg.csl
 bibliography: library/references.bib

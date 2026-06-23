@@ -78,7 +78,7 @@ if not database.function_exists('averageWeeklyMergedPRs'):
         "      min(date(merged_at, 'yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'')) AS first_merged_pr, "
         "      max(date(merged_at, 'yyyy-MM-dd\\'T\\'HH:mm:ss\\'Z\\'')) AS last_merged_pr "
         "    FROM pull_requests "
-        "    WHERE repo_id = :repo_id "
+        "    WHERE repository_id = :repository_id "
         "    PARALLEL"
         "  ), "
         "  $timespan = last_merged_pr.asLong() - first_merged_pr.asLong(), "
@@ -89,7 +89,7 @@ if not database.function_exists('averageWeeklyMergedPRs'):
     response = database.command({
         "command": f"""
         CREATE FUNCTION averageWeeklyMergedPRs "{function_body}"
-        PARAMETERS [repo_id]
+        PARAMETERS [repository_id]
         IDEMPOTENT true
         LANGUAGE SQL
         """
@@ -137,11 +137,11 @@ pd.DataFrame(repositories_result)
 def pull_request_timeline():
     query = f"""
     SELECT
-        repo_id,
+        repository_id,
         date(merged_at, "yyyy-MM-dd'T'HH:mm:ss'Z'").format('yyyy-ww') AS week,
         COUNT(*) AS merged_prs
     FROM pull_requests
-    GROUP BY repo_id, week
+    GROUP BY repository_id, week
     """
 
     return database.query(query)['result']
@@ -153,11 +153,11 @@ pull_request_timeline_result = pull_request_timeline()
 ```{python}
 def visualize_pull_request_timeline():
     df = pd.DataFrame(pull_request_timeline_result)
-    df = df[['repo_id', 'week', 'merged_prs']]
+    df = df[['repository_id', 'week', 'merged_prs']]
 
-    df = df.sort_values(['week', 'repo_id'])
+    df = df.sort_values(['week', 'repository_id'])
 
-    pivot = df.pivot(index='week', columns='repo_id', values='merged_prs')
+    pivot = df.pivot(index='week', columns='repository_id', values='merged_prs')
     pivot = pivot.fillna(0)
 
     axes = pivot.plot(figsize=(8, 6), legend=False)

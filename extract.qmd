@@ -1,5 +1,5 @@
 ---
-title: Extract Data From GitHub API
+title: Extract Data From GitHub API & Insert into OrientDB
 format: html
 ---
 
@@ -90,6 +90,7 @@ class OrientDB:
 database = OrientDB(ORIENTDB_HOST, ORIENTDB_USER, ORIENTDB_PASSWORD, ORIENTDB_DATABASE)
 ```
 
+<!-- disable wal -->
 
 ## GitHub
 
@@ -261,8 +262,8 @@ def query_data_from_api():
 
     pull_requests = {}
 
-    for repo in repositories:
-        pull_requests[repo['id']] = github.merged_pull_requests(repo['id'], PRS_PER_REPO)
+    for repository in repositories:
+        pull_requests[repository['id']] = github.merged_pull_requests(repository['id'], PRS_PER_REPO)
 
     return {
         'repositories': repositories,
@@ -276,33 +277,33 @@ def insert_into_database(data):
     repositories = data['repositories']
     pull_requests = data['pull_requests']
 
-    for repo in repositories:
-        repo_id = repo['id']
+    for repository in repositories:
+        repository_id = repository['id']
 
-        repo_entry = {
+        repository_entry = {
             "@class": REPOSITORIES,
-            "id": repo_id,
-            "name": repo['name'],
-            "full_name": repo['nameWithOwner'],
-            "url": repo['url'],
-            "description": repo['description'],
-            "owner": repo['owner']['login'],
-            "stars": repo['stargazerCount']
+            "id": repository_id,
+            "name": repository['name'],
+            "full_name": repository['nameWithOwner'],
+            "url": repository['url'],
+            "description": repository['description'],
+            "owner": repository['owner']['login'],
+            "stars": repository['stargazerCount']
         }
 
-        if repo.get('primaryLanguage') and repo['primaryLanguage'].get('name'):
-            repo_entry['language'] = repo['primaryLanguage']['name']
+        if repository.get('primaryLanguage') and repository['primaryLanguage'].get('name'):
+            repository_entry['language'] = repository['primaryLanguage']['name']
         
-        database.batch_create([repo_entry] + [
+        database.batch_create([repository_entry] + [
             {
                 "@class": PULL_REQUESTS,
                 "id": pr["number"],
-                "repo_id": repo_id,
+                "repository_id": repository_id,
                 "url": pr["url"],
                 "title": pr["title"],
                 "merged_at": pr["mergedAt"]
             }
-            for pr in pull_requests[repo_id]
+            for pr in pull_requests[repository_id]
         ])
 
     print(f"Finished inserting {len(repositories)} repositories and their pull requests into OrientDB.")
@@ -328,16 +329,32 @@ def import_data():
 import_data()
 ```
 
-### Add Schema Property for repo_id
+### Add Schema Property for repository_id
 ```{python}
-database.command({
-    "command": "CREATE PROPERTY pull_requests.repo_id STRING"
-}).json()
+def add_index_schema():
+    response = database.command({
+        "command": "CREATE PROPERTY pull_requests.repository_id STRING"
+    })
+
+    if response.status_code == 500:
+        print('Schema for index pull_requests.repository_id already exists.')
+    else:
+        print(response.json())
+
+add_index_schema()
 ```
 
 ### Add Index for pull request by repo id lookup
 ```{python}
-database.command({
-    "command": "CREATE INDEX pull_requests.repo_id NOTUNIQUE_HASH_INDEX"
-}).json()
+def create_index():
+    response = database.command({
+        "command": "CREATE INDEX pull_requests.repository_id NOTUNIQUE_HASH_INDEX"
+    })
+
+    if response.status_code == 500:
+        print('Index for pull_requests.repository_id already exists.')
+    else:
+        print(response.json())
+
+create_index()
 ```

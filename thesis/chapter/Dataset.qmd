@@ -1,3 +1,24 @@
 # Dataset Collection and Modeling in OrientDB
 
+The dataset used in this work is derived from GitHub which is a widely used platform for hosting and collaborating on software projects using Git.
+It focuses on the 200 most starred public repositories and up to 1000 of their most recent merged pull requests. A repository is a project workspace
+that stores source code and its full version history while a pull request is a proposed change that contributors submit and maintainers review and merge
+into the project. The data is gathered by GitHub's own public GraphQL API.
 
+The data acquisition workflow is designed so that the analysis can reuse existing data whenever possible and only contacts the GitHub API when necessary.
+At startup the notebook initializes the OrientDB instance and ensures that the two required classes exist for later use. The import procedure then follows
+a simple decision process. First it checks whether the `repositories` class already contains records to see if data acquisition is required. If the class
+is not empty the script assumes that the database has already been populated and skips any further import work. This avoids accidental duplication of data
+and keeps repeated runs idempotent. If the class is empty the script first looks for a local snapshot file named `exported_database.json` and uses
+that to initialize the dataset. Only if the database is empty and no snapshot file is available does the workflow fall back to querying the GitHub
+GraphQL API. In that case the notebook fetches the top 200 most starred repositories and for each repository up to 1000 merged pull requests. <!-- Add reference to GraphQL request code in appendix -->
+
+Once the raw data has been retrieved it will map the GitHub response to OrientDB documents and writes them into the `repositories` and `pull_requests` classes.
+For each repository the code creates one document in the `repositories` class that contains details like identifier, name, url, owner, star count and the primary language.
+In the same step it creates the list of the last 1000 pull requests including information like identifier, url, title, repository id, and merge timestamp.
+The wrapper uses a batch create call so that the repository and all of its pull request documents are inserted in a single transactional batch which reduces round trips
+and keeps the data consistent.
+
+After the data is inserted the scrip adds a unique hash index for the repository identifier in the pull requests class so they can be retrieved efficiently.
+This index is essential for the later analysis where queries repeatedly filter and aggregate pull requests by repository identifier in order to compute the
+average number of merged pull requests per week.

@@ -7,7 +7,7 @@ Organisation: FHDW Paderborn
 Studiengang: Applied Computer Science (B.Sc.)
 Studiengruppe: PFAX424A
 Dokumententyp: Paper
-Titel: Analyzing GitHub Repository Popularity and Activity
+Titel: Analyzing GitHub Repository Popularity and Activity using OrientDB
 Verfasser: | # für Titelseite
   \textbf{Connor Schweighöfer}\
   Riemekestraße 5\
@@ -37,10 +37,6 @@ format:
   html:
     lang: de
 ---
-
-<!-- Das Dokument beginnt hier: -->
-
-<!-- Mittels include-Anweisungen werden weitere qmd-Dateien eingebunden -->
 
 {{< include chapter/Introduction.qmd >}}
 

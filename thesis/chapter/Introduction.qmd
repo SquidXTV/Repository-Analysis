@@ -11,3 +11,6 @@ The dataset is retrieved dynamically from the GitHub GraphQL API and stored into
 This study focuses on the top 200 public repositories ranked by stars and collects up to 1000 most recently merged pull requests for each repository.
 Based on this dataset, the analysis computes, for each repository, the average number of pull requests merged per week and examines how this metric relates to the repository's popularity.
 Clarifying this relationship can support developers and organizations in making more informed decisions when evaluating third-party dependencies.
+
+<!-- Structure  -->
+<!-- Used Jupyter Notebooks for Analysis -->

@@ -101,8 +101,8 @@
 %\let\l@lstlisting\l@listing
 %\makeatother
 
-\renewcommand{\cftfigpresnum}{Abbildung~}
-\renewcommand{\cfttabpresnum}{Tabelle~}
+\renewcommand{\cftfigpresnum}{Figure~}
+\renewcommand{\cfttabpresnum}{Table~}
 \renewcommand{\cftcodelistingpresnum}{Listing~}
 \renewcommand{\cftfigaftersnum}{:}
 \renewcommand{\cfttabaftersnum}{:}
@@ -122,7 +122,7 @@
 \fancypagestyle{plain}{}
 
 % Macro für Quellenangaben unter Abbildungen und Tabellen
-\newcommand{\source}[1]{{\vspace{-5mm}\footnotesize\textsf{\textbf{Quelle:}} \textsf{#1}\par}}
+\newcommand{\source}[1]{{\vspace{-5mm}\footnotesize\textsf{\textbf{Source:}} \textsf{#1}\par}}
 
 % Anpassungen der Formatierung an Eclipse-Aussehen 
 % http://jevopi.blogspot.de/2010/03/nicely-formatted-listings-in-latex-with.html
@@ -168,16 +168,16 @@
 \newcommand{\blatt}{\stepcounter{anhangcounter}}
 
 \newcommand{\anhang}[1]{\setcounter{anhangcounter}{0}\refstepcounter{fktnr}
-\addcontentsline{fk}{subsection}{Anhang~\thefktnr: \hspace*{1em}#1}
-\subsection*{{Anhang~\thefktnr \hspace*{1em} #1 \hspace*{-1em}}}
+\addcontentsline{fk}{subsection}{Appendix~\thefktnr: \hspace*{1em}#1}
+\subsection*{{Appendix~\thefktnr \hspace*{1em} #1 \hspace*{-1em}}}
 }
 
 \newcommand{\subanhang}[1]{\setcounter{anhangcounter}{0}\refstepcounter{subfktnr}
-\addcontentsline{fk}{subsubsection}{Anhang~\thesubfktnr: \hspace*{1em}#1}
-\subsubsection*{{Anhang~\thesubfktnr \hspace*{1em} #1 \hspace*{-1em}}}
+\addcontentsline{fk}{subsubsection}{Appendix~\thesubfktnr: \hspace*{1em}#1}
+\subsubsection*{{Appendix~\thesubfktnr \hspace*{1em} #1 \hspace*{-1em}}}
 }
 
-\newcommand{\anhangsverzeichnis}{\mtcaddsection{\subsection*{Anhangsverzeichnis \@mkboth{FKT}{FKT}}}\@starttoc{fk}\newpage}
+\newcommand{\anhangsverzeichnis}{\mtcaddsection{\subsection*{List of Appendices \@mkboth{FKT}{FKT}}}\@starttoc{fk}\newpage}
 
 
 % Links im PDF
@@ -200,7 +200,7 @@
 }
 
 % Verbessert das Referenzieren von Kapiteln, Abbildungen etc.
-\usepackage[german,capitalise]{cleveref}
+\usepackage[english,capitalise]{cleveref}
 
 \makeglossaries\makeglossaries 
 \input{template/config/Abkuerzungen}

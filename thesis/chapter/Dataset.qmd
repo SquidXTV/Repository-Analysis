@@ -19,6 +19,6 @@ In the same step it creates the list of the last 1000 pull requests including in
 The wrapper uses a batch create call so that the repository and all of its pull request documents are inserted in a single transactional batch which reduces round trips
 and keeps the data consistent.
 
-After the data is inserted the scrip adds a unique hash index for the repository identifier in the pull requests class so they can be retrieved efficiently.
+After the data is inserted the script adds a unique hash index for the repository identifier in the pull requests class so they can be retrieved efficiently.
 This index is essential for the later analysis where queries repeatedly filter and aggregate pull requests by repository identifier in order to compute the
 average number of merged pull requests per week.

@@ -25,7 +25,7 @@ Ort: Paderborn
 ##########################################################
 
 jupyter: python3
-lang: de-De
+lang: en-En
 format:
   pdf:
     default: true
@@ -35,7 +35,7 @@ format:
     keep-tex: false
     latex-tinytex: false  
   html:
-    lang: de
+    lang: en
 ---
 
 {{< include chapter/Introduction.qmd >}}

@@ -1,1 +1,13 @@
 # Conclusion
+
+This study used OrientDB and Jupyter Notebooks to analyze how GitHub repositories popularity relates to development activity and
+how activity varies by language for the 200 most popular repositories. For the first hypothesis, the data does not support
+the idea that more stars imply higher activity. Within the top 200 repositories, projects with very different star counts often show
+similar activity level. Stars alone are therefore not a reliable indicator of how actively a project is maintained. The second hypothesis,
+that activity differs by primary language, is clearly supported.
+
+This study has several limitations. Most importantly, the dataset is small and biased towards the most popular repositories.
+Many practically relevant libraries likely sit in a mid-range of roughly 1000-50000 stars and are not covered here. In addition,
+activity is approximated only by their average merged pull requests over a time span, ignoring other signals such as issues,
+commits, releases or project age. Future work could extend this approach to a larger and more representative sample of repositories
+and refine the activity metric.

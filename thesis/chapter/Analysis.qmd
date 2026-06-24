@@ -1,1 +1,43 @@
 # Analysis
+
+## Hypothesis 1: More Popular Repositories Exhibit Higher Development Activity
+The central question in this study investigates whether more popular repositories also exhibit higher development activity.
+Popularity is approximates by the number of GitHub stars per repository, while activity is measured by the average number of
+pull requests merged per week. The underlying hypothesis is that more popular repositories attract more contributors and therefore
+should show higher pull requests throughput.`
+
+To obtain the activity metric, the OrientDB function `averageWeeklyMergedPRs` is applied to each repository. This function counts all
+merged pull requests belonging to a repository and determines the time span between the first and last merged pull requests. These
+two values are then combined to derive an average merge rate per week. This computation is performed for every repository, combined
+with its star count, and then visualized as a scatter plot, once with linear axes and once with logarithmic scaling on both axes.
+
+![Popularity vs Activity](img/popularity_vs_activity.png){#fig-popularity_vs_activity fig-align="center"}
+
+A visual inspection of @fig-popularity_vs_activity shows that the initial hypothesis is not supported by the data. The points
+are scattered across the plot without any clear upward or downward pattern, and repositories with very different star counts often have
+similar levels of activity. Most repositories between 100000 and 500000 stars cluster around 0.5 and 10 merged pull requests per week.
+In summary, the plot provides no clear evidence that higher popularity is associated with higher activity.
+
+## Hypothesis 2: Programming Language Influences Development Activity
+The second hypothesis examines whether the primary programming language of a repository is associated with its development activity.
+As before, activity is measured by the average number of pull requests per week. The hypothesis is that repositories with different
+languages exhibit different development activity.
+
+To test this hypothesis, the analysis first computes the activity metric for each repository and then groups repositories by their primary
+language. For each language, it calculates the average activity and visualizes the resulting values as a horizontal bar chart sorted
+by activity.
+
+![Average merged pull requests per week per language](img/language_vs_activity.png){#fig-language_vs_activity fig-align="center"}
+
+The @fig-language_vs_activity shows clear differences in average activity between languages, which supports the hypothesis that the
+primary language is associated with development activity. Languages such as C++, TypeScript, Rust, and Python lie towards the upper
+end of the distribution with relatively high activity. In contrast, languages like Markdown, HTML, CSS, and Dockerfile appear in the
+lower end with substantially lower activity.
+
+Two qualitative observations may help to interpret the differences. First, general purpose programming languages tend to be associated
+with higher activity, which is plausible given that they often back actively maintained software projects. Second, many highly starred
+repositories whose primary language is a markup or configuration language turn out, upon manual inspection, to be collection-style or
+resource-oriented projects rather than conventional code bases. Examples include 'awesome' which is a list of interesting topics or
+collections of free public APIs.
+These explanations remain speculative, but the plot provides clear evidence in support of the original hypothesis that repositories
+using different primary languages exhibit different levels of development activity.

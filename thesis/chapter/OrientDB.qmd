@@ -1,21 +1,28 @@
 # OrientDB
 
-OrientDB is a multi-model NoSQL database that combines documents and graphs into a single scalable database.
+OrientDB is a multi-model NoSQL database that combines documents and graphs into a single scalable database.[^1]
 In this paper, OrientDB is used as a document and class based store where the extracted data is represented as documents into the two classes
 `repositories` and `pull_requests`. Data stored in OrientDB is organized into classes that are roughly comparable to tables in relational systems.
 Each class groups documents that represent a single type of entity like a repository. Documents are flexible records that hold fields as key value
-pairs and may contain nested structures such as embedded objects. It supports schemaless, schema-full and mixed classes so a class can either enforce
+pairs and may contain nested structures such as embedded objects.[^2] It supports schemaless, schema-full and mixed classes so a class can either enforce
 property definitions and types or allow arbitrary fields. Classes can also inherit from other classes similar to inheritance in object oriented programming (OOP) <!-- Abkürzung -->
-which enables reuse of common properties across multiple entity types while still allowing specialization.
+which enables reuse of common properties across multiple entity types while still allowing specialization.[^3]
 
 OrientDB provides an SQL query language that serves as the primary interface for interacting with the database, with a dialect that supports familiar constructs
 such as `SELECT`, `WHERE`, `GROUP BY`, `ORDER BY`, and common aggregation functions. In this project data access and aggregation is expressed in this SQL dialect.
 To keep these queries efficient OrientDB offers indexing mechanisms on properties that commonly appear in `WHERE` clauses so queries can avoid full class scans
 and instead use indexes such as SB-Tree or hash indexes to jump directly to the relevant subset of documents. Beyond simple queries OrientDB also supports user
 defined functions which encapsulates reusuable logic, accept parameters and return computed results. In this paper, a custom function is used to encapsulate
-the computation of the average number of merged pull requests per week for a given repository id that provides this core metric through a single reusuable function.
+the computation of the average number of merged pull requests per week for a given repository id that provides this core metric through a single reusuable function.[^4]
 
 It also provides built-in support for exporting and importing databases in a JSON-based format, which is particularly useful for creating reproducible environments.
 This project uses a lightweight, custom wrapper in Python around the OrientDB HTTP REST API to interact with the database, because the available PyOrient driver
 is outdated. The wrapper encapsulates connection details and session handling and exposes a small set of high level methods such as `create_if_not_exist`, `add_class`,
-`add_document`, and `import_from_json`, which are sufficient to create the database, define classes, insert data and restore previously exported snapshots. 
+`add_document`, and `import_from_json`, which are sufficient to create the database, define classes, insert data and restore previously exported snapshots.[^5]
+
+
+[^1]: @orientdb_summary
+[^2]: @orientdb_classes @orientdb_data_modeling
+[^3]: @orientdb_schema @orientdb_inheritance
+[^4]: @orientdb_sql_reference
+[^5]: @orientdb_rest_api

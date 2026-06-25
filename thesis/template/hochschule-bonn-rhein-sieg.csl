@@ -258,12 +258,13 @@
       <key macro="author"/>
       <key macro="issued-year"/>
     </sort>
-    <layout prefix="(" suffix=")" delimiter="; ">
-      <group delimiter=", ">
+    <layout delimiter=", ">
+      <group prefix="(" suffix=")" delimiter=", ">
         <text macro="author-short"/>
         <text macro="issued-year"/>
         <text macro="citation-locator"/>
       </group>
+      <text macro="title" prefix=", "/>
     </layout>
   </citation>
   <bibliography delimiter-precedes-et-al="never" et-al-min="7" et-al-use-first="6" entry-spacing="0" line-spacing="2" hanging-indent="true">

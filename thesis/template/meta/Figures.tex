@@ -1,0 +1,12 @@
+\clearpage
+\makeatletter
+
+\section*{\listfigurename}        % numbered section "List of Figures"
+\addcontentsline{toc}{section}{\listfigurename}
+\fancyhead[L]{\listfigurename}   % header content if you want it
+\@starttoc{lof}                  % actually print the list of figures
+
+\makeatother
+\clearpage
+
+\fancyhead[L]{\slshape\nouppercase\leftmark}

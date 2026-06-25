@@ -13,12 +13,14 @@ Verfasser: | # für Titelseite
   Riemekestraße 5\
   33102 Paderborn
 Pruefer: Prof. Dr. U. Reus
-Abgabedatum: 2026-06-26
+Abgabedatum: 26th June 2026
 
 # für Ehrenwörtliche Erklärung
 Autor: Connor Schweighöfer
 AutorUnterschrift: "img/signature.png"
 Ort: Paderborn
+
+toc-title: "Table of Contents"
 
 # für Sperrvermerk...
 # Kooperationsunternehmen: adesso SE
@@ -31,6 +33,8 @@ format:
     default: true
     sperrvermerk: false
     gendervermerk: false
+    render-abbreviations: true
+    lot: false
     glossar: false
     keep-tex: false
     latex-tinytex: false  
@@ -58,6 +62,16 @@ format:
 \setcounter{table}{0}
 
 # List of Appendices
+
+## Data Extraction Notebook - extract.qmd {#sec-extract-notebook}
+
+The digital appendix contains the Quarto notebook `extract.qmd`. It documents the complete data extraction pipeline used in this paper.
+The notebook provides the executable code and configuration necessary to reproduce the dataset used in this paper.
+
+## Exported OrientDB Dataset - exported_database.json {#sec-dataset}
+
+The digital appendix contains the file `exported_database.json`, which is an export of the OrientDB database used in this paper.
+It includes the complete dataset derived from the GitHub GraphQL API.
 
 # References {.unnumbered}
 

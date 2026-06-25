@@ -2,13 +2,14 @@
 
 Modern software development heavily relies on open source ecosystems hosted on platforms such as GitHub.
 Repository popularity is often measured by the number of stars as a quick heuristic when selecting libraries and frameworks.
-However, popularity alone does not reveal how actively a project is maintained or how engaged its contributor community is.
+However, popularity alone does not reveal how actively a project is maintained or how engaged its contributor community is.^[@github_relevance]
 
 This paper addresses the problem of understanding the relationship between repository popularity and development activity on GitHub.
 Therefore it investigates whether projects with more stars also exhibit higher levels of contribution activity.
 The dataset is retrieved dynamically from the GitHub GraphQL API and stored into the underlying OrientDB database.
 This study focuses on the top 200 public repositories ranked by stars and collects up to 1000 most recently merged pull requests for each repository.
-Based on this dataset, the analysis computes, for each repository, the average number of pull requests merged per week and examines how this metric relates to the repository's popularity.
+Based on this dataset, the analysis computes, for each repository, the average number of pull requests merged per week and examines how this metric relates to the repository's popularity,
+using Jupyter Notebooks with Python for data processing and visualization.
 Clarifying this relationship can support developers and organizations in making more informed decisions when evaluating third-party dependencies.
 
 This paper is structured into five sections. The next section introduces OrientDB and its role as the NoSQL database for this study. Section 3 describes the dataset, including how repository

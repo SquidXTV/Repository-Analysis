@@ -1,9 +1,9 @@
 # Dataset Collection and Modeling in OrientDB
 
-The dataset used in this work is derived from GitHub which is a widely used platform for hosting and collaborating on software projects using Git.
+The dataset found in [Appendix @sec-dataset] and used in this work is derived from GitHub which is a widely used platform for hosting and collaborating on software projects using Git.
 It focuses on the 200 most starred public repositories and up to 1000 of their most recent merged pull requests. A repository is a project workspace
 that stores source code and its full version history while a pull request is a proposed change that contributors submit and maintainers review and merge
-into the project. The data is gathered by GitHub's own public GraphQL API.
+into the project. The data is gathered by GitHub's own public GraphQL API.^[@github_graphql]
 
 The data acquisition workflow is designed so that the analysis can reuse existing data whenever possible and only contacts the GitHub API when necessary.
 At startup the notebook initializes the OrientDB instance and ensures that the two required classes exist for later use. The import procedure then follows

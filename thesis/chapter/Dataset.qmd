@@ -11,7 +11,7 @@ a simple decision process. First it checks whether the `repositories` class alre
 is not empty the script assumes that the database has already been populated and skips any further import work. This avoids accidental duplication of data
 and keeps repeated runs idempotent. If the class is empty the script first looks for a local snapshot file named `exported_database.json` and uses
 that to initialize the dataset. Only if the database is empty and no snapshot file is available does the workflow fall back to querying the GitHub
-GraphQL API. In that case the notebook fetches the top 200 most starred repositories and for each repository up to 1000 merged pull requests. <!-- Add reference to GraphQL request code in appendix -->
+GraphQL API. In that case the notebook fetches the top 200 most starred repositories and for each repository up to 1000 merged pull requests.
 
 Once the raw data has been retrieved it will map the GitHub response to OrientDB documents and writes them into the `repositories` and `pull_requests` classes.
 For each repository the code creates one document in the `repositories` class that contains details like identifier, name, url, owner, star count and the primary language.
